@@ -18,6 +18,6 @@ export const routes = createBrowserRouter(
     },
   ],
   {
-    basename: "/djikstras-algorithm-visualizer",
+    basename: "/djikstras-algorithm-visualiser",
   }
 );
