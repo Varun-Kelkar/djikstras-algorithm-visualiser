@@ -24,7 +24,10 @@ type PriorityQueueItem = { node: string; dist: number };
 const Explore = () => {
   const adjacencyList = useRef<Graph>({});
   const [path, setPath] = useState<string[]>([]);
-
+  const [error, setError] = useState<boolean>(false);
+  const allPaths = new Set<string>();
+  const [allPathsFound, setAllPathsFound] = useState<string[]>([]);
+  const chipColors = ["red", "blue", "green", "yellow", "cyan"];
   const addNode = (node: string) => {
     if (!adjacencyList?.current[node]) {
       adjacencyList.current[node] = [];
@@ -41,6 +44,7 @@ const Explore = () => {
 
   const djikstra = (source: string, target: string) => {
     setPath([]);
+    setError(false);
     const distances: Distances = {};
     const previous: PathResult = {};
     const visited = new Set<string>();
@@ -83,27 +87,88 @@ const Explore = () => {
       curr = previous[curr] as string;
     }
 
+    if (newPath.length <= 1) {
+      setError(true);
+      return;
+    }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     setPath([...newPath]);
   };
 
+  const showAllPaths = (source: string, target: string) => {
+    const path: string[] = [];
+    const visited = new Set<string>();
+    setError(false);
+
+    const dfs = (currentNode: string) => {
+      visited.add(currentNode);
+      path.push(currentNode);
+      if (currentNode === target) {
+        allPaths.add(path.join("-"));
+      } else {
+        for (const neighbor of adjacencyList.current[currentNode]) {
+          const { node: neighborNode } = neighbor;
+          if (!visited.has(neighborNode)) {
+            dfs(neighborNode);
+          }
+        }
+      }
+      path.pop();
+      visited.delete(currentNode);
+    };
+    dfs(source);
+
+    setAllPathsFound([...allPaths]);
+
+    if (allPaths.size === 0) {
+      setError(true);
+    }
+  };
+
   const initData = () => {
-    addEdge("new-york", "london", 5567);
-    addEdge("london", "paris", 343);
-    addEdge("paris", "berlin", 1054);
-    addEdge("berlin", "moscow", 1600);
-    addEdge("moscow", "beijing", 5792);
-    addEdge("beijing", "tokyo", 2096);
-    addEdge("tokyo", "sydney", 7830);
-    addEdge("sydney", "mumbai", 10410);
-    addEdge("mumbai", "dubai", 1927);
-    addEdge("dubai", "london", 5500);
-    // New directed edges
-    addEdge("new-york", "toronto", 800);
-    addEdge("toronto", "sao-paulo", 8190);
-    addEdge("sao-paulo", "cape-town", 6800);
-    addEdge("cape-town", "cairo", 6400);
-    addEdge("cairo", "singapore", 8300);
+    const graphEdges = [
+      { from: "New York", to: "London", weight: 600 },
+      { from: "New York", to: "Paris", weight: 850 },
+
+      { from: "London", to: "Paris", weight: 200 },
+      { from: "Toronto", to: "Paris", weight: 1200 },
+
+      { from: "Paris", to: "Rome", weight: 300 },
+      { from: "London", to: "Rome", weight: 800 },
+
+      { from: "Rome", to: "Moscow", weight: 500 },
+      { from: "Paris", to: "Moscow", weight: 1000 },
+
+      { from: "Moscow", to: "Dubai", weight: 600 },
+      { from: "Rome", to: "Dubai", weight: 1100 },
+
+      { from: "Dubai", to: "Mumbai", weight: 450 },
+      { from: "moscow", to: "Mumbai", weight: 1000 },
+
+      { from: "Mumbai", to: "Beijing", weight: 700 },
+      { from: "Dubai", to: "Beijing", weight: 1500 },
+
+      { from: "Beijing", to: "Tokyo", weight: 500 },
+      { from: "Mumbai", to: "Tokyo", weight: 1300 },
+
+      { from: "Tokyo", to: "Singapore", weight: 800 },
+      { from: "Beijing", to: "Singapore", weight: 1000 },
+
+      { from: "Singapore", to: "Sydney", weight: 700 },
+      { from: "Mumbai", to: "Sydney", weight: 1500 },
+
+      { from: "Mumbai", to: "Cape Town", weight: 1300 },
+      { from: "Rome", to: "Cape Town", weight: 1700 },
+
+      { from: "Cape Town", to: "Buenos Aires", weight: 1000 },
+      { from: "Sydney", to: "Buenos Aires", weight: 1800 },
+
+      { from: "New York", to: "Los Angeles", weight: 400 },
+      { from: "Toronto", to: "Los Angeles", weight: 800 },
+    ];
+    graphEdges.forEach(({ from, to, weight }) => {
+      addEdge(from, to, weight);
+    });
   };
 
   useEffect(() => {
@@ -112,9 +177,46 @@ const Explore = () => {
 
   return (
     <div className={styles.exploreContainer}>
-      <div>
-        <ControlPanel cities={cities} onFindPath={djikstra} />
-      </div>
+      <section className={styles.controlPanel}>
+        <ControlPanel
+          cities={cities}
+          onFindPath={djikstra}
+          onFindAllPaths={showAllPaths}
+        />
+      </section>
+      <section className={styles.pathInfo}>
+        <h2>Path Information</h2>
+        {allPathsFound.length > 0 ? (
+          <div className={styles.results}>
+            <h3>All Possible Paths ({allPathsFound.length})</h3>
+            <ul>
+              {allPathsFound.map((path, index) => (
+                <li key={index}>
+                  {path.split("-").map((cities) => (
+                    <span
+                      className={`${styles.chip} ${
+                        styles[chipColors[Math.floor(Math.random() * 5)]]
+                      }`}
+                    >
+                      {cities}
+                    </span>
+                  ))}
+                  <span className={styles.weight}>
+                    {/* ({calculateTotalWeight(path)} km) */}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <span>
+            {!error
+              ? "Select a source and target city. Click on Highlight Shortest Path to see the shortest path highlighted. Click on Find All Paths to see all possible paths."
+              : "Sorry! There's no direct path visualisation for this graph yet."}
+          </span>
+        )}
+        <br />
+      </section>
       <GraphVisualiser nodesToHighlight={path} />
     </div>
   );

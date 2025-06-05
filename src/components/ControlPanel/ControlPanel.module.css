@@ -5,7 +5,7 @@
   justify-content: center;
   gap: 1rem;
   padding: 1rem 2rem;
- background: linear-gradient(to bottom right, #dbeafe, #ffffff);
+  background: linear-gradient(to bottom right, #dbeafe, #ffffff);
   border-bottom: 1px solid #d1d5db;
 }
 .selectContainer {
@@ -33,4 +33,9 @@
 
 .button:hover {
   background-color: #1d4ed8;
+}
+
+.button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
 }

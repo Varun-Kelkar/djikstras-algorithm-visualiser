@@ -19,7 +19,7 @@ const GraphVisualiser = ({ nodesToHighlight }: GraphVisualiserProps) => {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   const highlightNodes = (nodesToHighlight: string[]) => {
-    if (!nodesToHighlight || nodesToHighlight.length === 0) {
+    if (!nodesToHighlight || nodesToHighlight.length <= 1) {
       return;
     }
     const highlightedNodes = nodes.map((node) => {
